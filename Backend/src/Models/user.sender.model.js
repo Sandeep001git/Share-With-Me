@@ -10,8 +10,17 @@ const userSchema = Schema({
     mode:{
         type: String,
         required: true,
-    }
+    },
+    secreateCode:{
+        type: String,
+        required: true,
+    },
+    senderPeerId:{
+        type: String,
+        required: true,
+    },
+    
 });
 
-export const User=mongoose.model("User",userSchema)
+export const User=mongoose.model("UserSender",userSchema)
 
