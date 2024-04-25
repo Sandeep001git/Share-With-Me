@@ -1,9 +1,9 @@
 import { User } from "../Models/user.sender.model.js";
-import {UserReciv} from "../Models/user.reciver.model.js"
+import { UserReciv } from "../Models/user.reciver.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import conn,{ connect } from "../utils/conn.peerjs.js";
+import conn, { connect } from "../utils/conn.peerjs.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -28,6 +28,15 @@ const checkKey = async (key) => {
         return false;
     }
 };
+
+const isSenderIsConnected = () => {
+    const senderConnetion = conn.on("connection", (conn) => {
+        return conn;
+    });
+    if (senderConnetion) return true;
+    else false;
+};
+
 const createUser = asyncHandler(async (req, res) => {
     const { username, mode } = req.body;
 
@@ -36,12 +45,12 @@ const createUser = asyncHandler(async (req, res) => {
     }
     if (mode == "sender") {
         const secreateCode = generateKey({ username, mode });
-        const senderPeerId=connect()
+        const senderPeerId = connect();
         const user = await User.create({
             username,
             mode,
             secreateCode,
-            senderPeerId
+            senderPeerId,
         });
 
         if (!user) {
@@ -52,9 +61,10 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(new ApiResponse(200, user, secreateCode, "user is created"));
+            .json(
+                new ApiResponse(200, [user, secreateCode], "user is created")
+            );
     } else {
-
         const user = await UserReciv.create({
             username,
             mode,
@@ -68,7 +78,7 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(new ApiResponse(200, user, secreateCode, "user is created"));
+            .json(new ApiResponse(200, UserReciv._id, "user is created"));
     }
 });
 
@@ -80,21 +90,71 @@ const peerConnection = asyncHandler(async (req, res) => {
     // ->sending desired data to reciver
 
     const { key } = req.body;
-        const val=checkKey(key)
-        if(val){
-            try {
-                
-                const sender=User.findOne({key},{new:true})
-                const senderId=sender[senderPeerId]
-                
-                conn.on('connect',senderId)
-                
-            } catch (error) {
-                throw new ApiError(505,"cannot connect to peer server : ",error)
+    const val = checkKey(key);
+    if (val) {
+        try {
+            const sender = User.findOne({ key }, { new: true });
+            const senderId = sender.senderPeerId;
+
+            const userConnet = await conn.on("connect", senderId);
+            if (userConnet) {
+                return (
+                    res.status(200),
+                    json(new ApiResponse(200, "user is connected"))
+                );
             }
+        } catch (error) {
+            throw new ApiError(505, "cannot connect to peer server : ", error);
         }
-        return res.status(400),
-        json(new ApiResponse(400,'Key is invalid'))
+    }
+    return res.status(400), json(new ApiResponse(400, "Key is invalid"));
 });
 
-export { createUser, peerConnection };
+const connectionEstablisedSignalToSender = () => {};
+
+const senderFileSharing = asyncHandler(async (req, res) => {
+    const { files } = req.body;
+
+    const conn = isSenderIsConnected();
+    if (conn) {
+    }
+});
+
+const reciverDataStoreage = () => {
+    let receivedChunks = []; 
+    let totalSize = 0; 
+    const conn = isSenderIsConnected();
+
+    conn.on("data", (data) => {
+        if (data.type === "file") {
+            totalSize = data.size;
+        } else {
+            receivedChunks.push(data);
+
+            let receivedSize = receivedChunks.reduce(
+                (acc, chunk) => acc + chunk.length,
+                0
+            );
+
+            if (receivedSize === totalSize) {
+                const fileData = new Blob(receivedChunks, {
+                    type: "application/octet-stream",
+                });
+                const fileURL = URL.createObjectURL(fileData);
+
+                const a = document.createElement("a");
+                a.href = fileURL;
+                a.download = data.name;
+                document.body.appendChild(a);
+                a.click();
+
+                document.body.removeChild(a);
+                URL.revokeObjectURL(fileURL);
+
+                receivedChunks = [];
+            }
+        }
+    });
+};
+
+export { createUser, peerConnection, senderFileSharing, reciverDataStoreage };
