@@ -3,7 +3,9 @@ import { UserReciv } from "../Models/user.reciver.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import conn, { connect } from "../utils/conn.peerjs.js";
+import { conn, connect } from "../utils/conn.peerjs.js";
+import { encryption } from "../utils/encryption.util.js";
+import { decryption } from "../utils/decryption.util.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -113,16 +115,26 @@ const peerConnection = asyncHandler(async (req, res) => {
 const connectionEstablisedSignalToSender = () => {};
 
 const senderFileSharing = asyncHandler(async (req, res) => {
-    const { files } = req.body;
-
-    const conn = isSenderIsConnected();
-    if (conn) {
+    const senderFile = req.files?.sendFile[0];
+    const encryptionAndDecryptionPassward =
+        process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
+    if (senderFile) {
+        const conn = isSenderIsConnected();
+        if (conn) {
+            const file = encryption(
+                senderFile,
+                encryptionAndDecryptionPassward
+            );
+            conn.send(file);
+        }
     }
 });
 
 const reciverDataStoreage = () => {
-    let receivedChunks = []; 
-    let totalSize = 0; 
+    const encryptionAndDecryptionPassward =
+        process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
+    let receivedChunks = [];
+    let totalSize = 0;
     const conn = isSenderIsConnected();
 
     conn.on("data", (data) => {
@@ -135,9 +147,12 @@ const reciverDataStoreage = () => {
                 (acc, chunk) => acc + chunk.length,
                 0
             );
-
+            const file = decryption(
+                receivedChunks,
+                encryptionAndDecryptionPassward
+            );
             if (receivedSize === totalSize) {
-                const fileData = new Blob(receivedChunks, {
+                const fileData = new Blob(file, {
                     type: "application/octet-stream",
                 });
                 const fileURL = URL.createObjectURL(fileData);
@@ -157,4 +172,14 @@ const reciverDataStoreage = () => {
     });
 };
 
-export { createUser, peerConnection, senderFileSharing, reciverDataStoreage };
+const closeConnection = () => {
+    conn.close();
+};
+
+export {
+    createUser,
+    peerConnection,
+    senderFileSharing,
+    reciverDataStoreage,
+    closeConnection,
+};
