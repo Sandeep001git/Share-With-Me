@@ -1,1 +1,1 @@
-export default DB_NAME='ShareWithMe'
+export const  DB_NAME='ShareWithMe'

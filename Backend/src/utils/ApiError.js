@@ -1,5 +1,5 @@
 
-class ApiResponse{
+class ApiError extends Error{
 
     constructor(
         statuscode,
@@ -7,9 +7,9 @@ class ApiResponse{
         errors=[],
         stack=''
     ){
-        super(message),
+        super(message)
+        this.statuscode=statuscode
         this.data=null
-        this.statuscode=statuscode,
         this.errors=errors
         this.success=false
 
@@ -20,4 +20,4 @@ class ApiResponse{
         }
     }
 }
-export  {ApiResponse}
+export  {ApiError}

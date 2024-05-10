@@ -1,0 +1,29 @@
+{
+  "author": "Sandeep",
+  "dependencies": {
+    "cors": "2.8.5",
+    "dotenv": "16.4.5",
+    "dotnet": "1.1.4",
+    "express": "4.19.2",
+    "mongoose": "8.3.4",
+    "peerjs": "1.5.2"
+  },
+  "description": "sending files from user to user",
+  "devDependencies": {
+    "nodemon": "3.1.0"
+  },
+  "keywords": [
+    "send",
+    "view",
+    "download"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "backend",
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

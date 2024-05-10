@@ -4,8 +4,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { conn, connect } from "../utils/conn.peerjs.js";
-import { encryption } from "../utils/encryption.util.js";
-import { decryption } from "../utils/decryption.util.js";
+import  encryption  from "../utils/encryption.util.js";
+import  decryption  from "../utils/decryption.util.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -40,14 +40,17 @@ const isSenderIsConnected = () => {
 };
 
 const createUser = asyncHandler(async (req, res) => {
-    const { username, mode } = req.body;
+  
+    const { username, mode } = req.query;
+
 
     if ([username, mode].some((fields) => fields?.trim == "")) {
         throw new ApiError(400, "username is required");
     }
     if (mode == "sender") {
         const secreateCode = generateKey({ username, mode });
-        const senderPeerId = connect();
+        const senderPeerId =await connect();
+        console.log(senderPeerId)
         const user = await User.create({
             username,
             mode,

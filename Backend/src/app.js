@@ -1,4 +1,4 @@
-import {express} from "express";
+import express from "express";
 import cors from "cors";
 import userRouter from "./routes/user.routes.js"
 
@@ -9,6 +9,6 @@ app.use(cors({
     credentials: true
 }))
 
-app.use('/api/v1/users',userRouter)
+app.use('/api/v1/',userRouter)
 
 export default app
