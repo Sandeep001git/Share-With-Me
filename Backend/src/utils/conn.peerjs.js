@@ -1,19 +1,15 @@
-import  PeerServer   from "peerjs";
-import {asyncHandler}  from "./asyncHandler.js";
-const conn =new PeerServer.Peer ({
-    host: "0.peerjs.com",
-    port: 443,
-    path: "/",
-    pingInterval: 5000,
+import { expressPeerServer } from "../app.js";
+
+const connection = new Map();
+
+expressPeerServer.on("connection", (conn)=>{
+    connection.set(conn.id,conn)
+    console.log(`Peer connected: ${conn.id}`);
+})
+
+peerServer.on('disconnect', (conn) => {
+    connection.delete(conn.id);
+    console.log(`Peer disconnected: ${conn.id}`);
 });
 
-const connect = asyncHandler(async (req, res) => {
-    conn.on("open", (id) => {
-        return res.id;
-    }).on("error", (error) => {
-        return res.error
-    });
-});
-
-export {conn, connect};
-
+export { connection };

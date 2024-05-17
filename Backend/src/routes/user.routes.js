@@ -1,9 +1,10 @@
 import { Router } from "express";
-import {createUser} from '../controllers/Connection.controller.js'
+import {createUser , peerConnection , reciverDataStoreage , closeConnection} from '../controllers/Connection.controller.js'
 
 const router=Router()
 
 // router.post("/connect",connection)
-router.get("/user",createUser)
+router.post("/create/user",createUser)
+router.post("/connect/user",peerConnection)
 
 export default router

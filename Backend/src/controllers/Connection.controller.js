@@ -3,9 +3,9 @@ import { UserReciv } from "../Models/user.reciver.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { conn, connect } from "../utils/conn.peerjs.js";
-import  encryption  from "../utils/encryption.util.js";
-import  decryption  from "../utils/decryption.util.js";
+import { connection } from "../utils/conn.peerjs.js";
+import encryption from "../utils/encryption.util.js";
+import decryption from "../utils/decryption.util.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -23,34 +23,27 @@ const generateKey = ({ ...user }) => {
 };
 
 const checkKey = async (key) => {
-    const dbCode = await User.findOne({ secreateCode });
-    if (dbCode == key) {
+    const dbCode = await User.findOne({ key });
+    if (dbCode) {
         return true;
     } else {
         return false;
     }
 };
 
-const isSenderIsConnected = () => {
-    const senderConnetion = conn.on("connection", (conn) => {
-        return conn;
-    });
-    if (senderConnetion) return true;
-    else false;
+const isSenderIsConnected = (senderId) => {
+    return connection.has(senderId);
 };
 
 const createUser = asyncHandler(async (req, res) => {
-  
-    const { username, mode } = req.query;
-
+    const { username, mode } = req.body;
 
     if ([username, mode].some((fields) => fields?.trim == "")) {
         throw new ApiError(400, "username is required");
     }
     if (mode == "sender") {
         const secreateCode = generateKey({ username, mode });
-        const senderPeerId =await connect();
-        console.log(senderPeerId)
+        const senderPeerId = 1516521131354363;
         const user = await User.create({
             username,
             mode,
@@ -66,16 +59,14 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(
-                new ApiResponse(200, [user, secreateCode], "user is created")
-            );
+            .json(new ApiResponse(200, [user], "user is created"));
     } else {
         const user = await UserReciv.create({
             username,
             mode,
         });
 
-        if (user) {
+        if (!user) {
             throw new ApiError(
                 500,
                 "Something went wrong while registring the user"
@@ -83,56 +74,70 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(new ApiResponse(200, UserReciv._id, "user is created"));
+            .json(new ApiResponse(200, user._id, "user is created"));
     }
 });
 
 const peerConnection = asyncHandler(async (req, res) => {
-    //  peerjs connection
-    // ->getting secreateCode
-    // ->creating connection from reciver side with connection util
-    // ->sending id to sender and establishing coonection
-    // ->sending desired data to reciver
 
     const { key } = req.body;
     const val = checkKey(key);
-    if (val) {
-        try {
-            const sender = User.findOne({ key }, { new: true });
-            const senderId = sender.senderPeerId;
-
-            const userConnet = await conn.on("connect", senderId);
-            if (userConnet) {
-                return (
-                    res.status(200),
-                    json(new ApiResponse(200, "user is connected"))
-                );
-            }
-        } catch (error) {
-            throw new ApiError(505, "cannot connect to peer server : ", error);
-        }
+    if (!val) {
+        return res.status(400).json(new ApiError(400, "Key is invalid"));
     }
-    return res.status(400), json(new ApiResponse(400, "Key is invalid"));
+    try {
+        const sender = await User.findOne({ secreateCode: key }, { new: true });
+        if (sender !== null) {
+            return res.status(200).json(
+                new ApiResponse('200',sender,'sender data retrived succesfully')
+            )
+        } else {
+            return res.status(404).json(new ApiError(404, "Sender not found"));
+        }
+    } catch (error) {
+        throw new ApiError(505, "cannot connect to peer server : ", error);
+    }
 });
-
-const connectionEstablisedSignalToSender = () => {};
 
 const senderFileSharing = asyncHandler(async (req, res) => {
-    const senderFile = req.files?.sendFile[0];
-    const encryptionAndDecryptionPassward =
-        process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
-    if (senderFile) {
-        const conn = isSenderIsConnected();
-        if (conn) {
-            const file = encryption(
-                senderFile,
-                encryptionAndDecryptionPassward
-            );
-            conn.send(file);
+    try {
+        const senderFile = req.files?.sendFile?.[0];
+        const {senderId} = req.body
+        const encryptionAndDecryptionPassword =
+            process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
+        if (!senderFile) {
+            return res.status(400).json(new ApiError(400, "No file provided"));
         }
+        if (!encryptionAndDecryptionPassword) {
+            return res
+                .status(500)
+                .json(new ApiError(500, "Encryption password not found"));
+        }
+        const conn = isSenderIsConnected(senderId);
+        if (!conn) {
+            return res
+                .status(500)
+                .json(new ApiError(500, "Sender is not connected"));
+        }
+
+        const encryptedFile = encryption(
+            senderFile,
+            encryptionAndDecryptionPassword
+        );
+        const peer = connection.get(senderId)
+        peer.send(encryptedFile);
+        return res
+            .status(200)
+            .json(new ApiResponse(200, "File sent successfully"));
+    } catch (error) {
+        return res
+            .status(500)
+            .json(new ApiError(500, "Error sending file", error));
     }
 });
 
+
+//bellow this lisne  function while be shift to front end
 const reciverDataStoreage = () => {
     const encryptionAndDecryptionPassward =
         process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
@@ -178,6 +183,7 @@ const reciverDataStoreage = () => {
 const closeConnection = () => {
     conn.close();
 };
+//to this line
 
 export {
     createUser,

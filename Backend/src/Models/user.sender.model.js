@@ -22,5 +22,5 @@ const userSchema = Schema({
     
 });
 
-export const User=mongoose.model("UserSender",userSchema)
+export const User=mongoose.model("Senders",userSchema)
 
