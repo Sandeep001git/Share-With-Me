@@ -1,8 +1,7 @@
+/* eslint-disable no-unused-vars */
 import fs from 'fs';
-import path from "path";
-import crypto, { Cipher } from 'crypto';
+import crypto from 'crypto';
 import zlib from 'zlib';
-import AppendInitVect from "../conf/AppendInitVect.js";
 
 const getCrptoKey=(password)=>{
     return crypto.createHash('sha256').update(password).digest()

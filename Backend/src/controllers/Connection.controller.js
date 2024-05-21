@@ -4,8 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { connection } from "../utils/conn.peerjs.js";
-import encryption from "../utils/encryption.util.js";
-import decryption from "../utils/decryption.util.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -29,10 +27,6 @@ const checkKey = async (key) => {
     } else {
         return false;
     }
-};
-
-const isSenderIsConnected = (senderId) => {
-    return connection.has(senderId);
 };
 
 const createUser = asyncHandler(async (req, res) => {
@@ -59,7 +53,7 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(new ApiResponse(200, [user], "user is created"));
+            .json(new ApiResponse(200, user, "user is created"));
     } else {
         const user = await UserReciv.create({
             username,
@@ -74,7 +68,7 @@ const createUser = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(new ApiResponse(200, user._id, "user is created"));
+            .json(new ApiResponse(200, user, "user is created"));
     }
 });
 
@@ -99,96 +93,7 @@ const peerConnection = asyncHandler(async (req, res) => {
     }
 });
 
-const senderFileSharing = asyncHandler(async (req, res) => {
-    try {
-        const senderFile = req.files?.sendFile?.[0];
-        const {senderId} = req.body
-        const encryptionAndDecryptionPassword =
-            process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
-        if (!senderFile) {
-            return res.status(400).json(new ApiError(400, "No file provided"));
-        }
-        if (!encryptionAndDecryptionPassword) {
-            return res
-                .status(500)
-                .json(new ApiError(500, "Encryption password not found"));
-        }
-        const conn = isSenderIsConnected(senderId);
-        if (!conn) {
-            return res
-                .status(500)
-                .json(new ApiError(500, "Sender is not connected"));
-        }
-
-        const encryptedFile = encryption(
-            senderFile,
-            encryptionAndDecryptionPassword
-        );
-        const peer = connection.get(senderId)
-        peer.send(encryptedFile);
-        return res
-            .status(200)
-            .json(new ApiResponse(200, "File sent successfully"));
-    } catch (error) {
-        return res
-            .status(500)
-            .json(new ApiError(500, "Error sending file", error));
-    }
-});
-
-
-//bellow this lisne  function while be shift to front end
-const reciverDataStoreage = () => {
-    const encryptionAndDecryptionPassward =
-        process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
-    let receivedChunks = [];
-    let totalSize = 0;
-    const conn = isSenderIsConnected();
-
-    conn.on("data", (data) => {
-        if (data.type === "file") {
-            totalSize = data.size;
-        } else {
-            receivedChunks.push(data);
-
-            let receivedSize = receivedChunks.reduce(
-                (acc, chunk) => acc + chunk.length,
-                0
-            );
-            const file = decryption(
-                receivedChunks,
-                encryptionAndDecryptionPassward
-            );
-            if (receivedSize === totalSize) {
-                const fileData = new Blob(file, {
-                    type: "application/octet-stream",
-                });
-                const fileURL = URL.createObjectURL(fileData);
-
-                const a = document.createElement("a");
-                a.href = fileURL;
-                a.download = data.name;
-                document.body.appendChild(a);
-                a.click();
-
-                document.body.removeChild(a);
-                URL.revokeObjectURL(fileURL);
-
-                receivedChunks = [];
-            }
-        }
-    });
-};
-
-const closeConnection = () => {
-    conn.close();
-};
-//to this line
-
 export {
     createUser,
     peerConnection,
-    senderFileSharing,
-    reciverDataStoreage,
-    closeConnection,
 };

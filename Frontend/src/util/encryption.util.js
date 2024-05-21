@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from "path";
-import crypto, { Cipher } from 'crypto';
+import crypto from 'crypto';
 import zlib from 'zlib';
 import AppendInitVect from "../conf/AppendInitVect.js";
 

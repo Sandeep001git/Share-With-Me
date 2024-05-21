@@ -2,10 +2,10 @@ function KeyPanel() {
   let userInput;
   const handleInputChange = () => {};
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-96">
+    <div className="flex flex-col items-center justify-center min-h-screen shadow-lg bg-gray-100">
+      <div className="bg-white p-8 rounded shadow-lg w-96 ">
         <label
-          className="block text-gray-700 text-sm font-bold mb-2"
+          className="block text-gray-700 text-lg font-bold mb-2"
           htmlFor="secretCode">
           secret Code
         </label>
@@ -20,7 +20,7 @@ function KeyPanel() {
         <button
           type="button"
           id="secr-code-btn"
-          className="m-0 px-1 py-2 rounded-md mt-3 bg-indigo-600 text-white justify-center ">
+          className=" m-0 px-1 py-2 rounded-md mt-3 bg-red-600 text-white justify-center ">
           Submit
         </button>
       </div>
