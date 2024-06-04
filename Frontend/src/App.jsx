@@ -1,16 +1,13 @@
 /* eslint-disable no-unused-vars */
-// import { useState } from 'react'
-import CreateUser from "./home/CreateUser.jsx";
-import Loading from "./home/Loading.jsx";
-import Container from "./container/ContainerComponent.jsx";
-import KeyPanel from "./home/KeyPanel.jsx";
-import SharingPanel from "./home/SharingPanel.jsx";
-import { Routes , Route } from "react-router-dom";
+import  {SharingPanel,KeyPanel,CreateUser,Loading}  from "./home/index.js";
+import Container from "./container/ContainerComponent.jsx"
+import { Routes , Route }from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store/Store.js";
 
 function App() {
-  // const [count, setCount] = useState(0)
-
   return (
+    <Provider store={store}>
     <Container>
       <Routes>
           <Route path="/" element={<CreateUser />} />
@@ -19,6 +16,7 @@ function App() {
           <Route path="/sender" element={<SharingPanel />} />
         </Routes>
     </Container>
+    </Provider>
   );
 }
 

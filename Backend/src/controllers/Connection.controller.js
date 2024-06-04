@@ -30,14 +30,14 @@ const checkKey = async (key) => {
 };
 
 const createUser = asyncHandler(async (req, res) => {
-    const { username, mode } = req.body;
-
+    const { username, mode , peerId} = req.body;
+    console.log(peerId)
     if ([username, mode].some((fields) => fields?.trim == "")) {
         throw new ApiError(400, "username is required");
     }
     if (mode == "sender") {
         const secreateCode = generateKey({ username, mode });
-        const senderPeerId = 1516521131354363;
+        const senderPeerId = peerId;
         const user = await User.create({
             username,
             mode,
@@ -72,6 +72,7 @@ const createUser = asyncHandler(async (req, res) => {
     }
 });
 
+//Reciver Function
 const peerConnection = asyncHandler(async (req, res) => {
 
     const { key } = req.body;
