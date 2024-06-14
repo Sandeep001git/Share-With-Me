@@ -4,7 +4,7 @@ import { FaRegCopy} from "react-icons/fa"
 function SenderKey() {
     const user=useSelector((state)=>state.User)
     const copyToClipboard =()=>{
-        navigator.clipboard.writeText(user.secreateCode)
+        navigator.clipboard.writeText(user[0].data.data.secreateCode)
     }
     
   return (

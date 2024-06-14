@@ -21,10 +21,12 @@ function CreateUser() {
         e.preventDefault();
         const user = await createUser(username, mode, peer.id);
         if (user) {
-            console.log("okk");
-        }
-        dispatch(userData(user));
-        navigate(mode === "sender" ? "/sender" : "/receiver");
+            dispatch(userData(user));
+            navigate(mode === "sender" ? "/sender" : "/reciver");
+            }
+            else{
+                console.error(user.message)
+            }
     };
 
     return (

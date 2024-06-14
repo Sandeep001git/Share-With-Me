@@ -10,8 +10,12 @@ const userSchema = Schema({
     mode:{
         type: String,
         required: true,
-    }
+    },
+    revciverPeerId:{
+        type: String,
+        required: true,
+    },
 });
 
-export const UserReciv=mongoose.model("UserReciver",userSchema)
+export const UserReciv=mongoose.model("Reciver",userSchema)
 

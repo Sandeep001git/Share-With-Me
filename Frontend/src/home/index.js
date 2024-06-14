@@ -4,6 +4,7 @@ import KeyPanel from './KeyPanel';
 import Loading from './Loading';
 import SharingPanel from './SharingPanel';
 import SenderKey from "./SenderKey"
+import FileReceiver from "./FileRecevier"
 
 export {
     CreateUser,
@@ -11,5 +12,6 @@ export {
     KeyPanel,
     Loading,
     SharingPanel,
-    SenderKey
+    SenderKey,
+    FileReceiver
 }

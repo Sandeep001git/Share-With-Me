@@ -3,7 +3,6 @@ import { UserReciv } from "../Models/user.reciver.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { connection } from "../utils/conn.peerjs.js";
 
 const generateKey = ({ ...user }) => {
     //user.model -> name ,_id , mode
@@ -31,7 +30,6 @@ const checkKey = async (key) => {
 
 const createUser = asyncHandler(async (req, res) => {
     const { username, mode , peerId} = req.body;
-    console.log(peerId)
     if ([username, mode].some((fields) => fields?.trim == "")) {
         throw new ApiError(400, "username is required");
     }
@@ -55,9 +53,11 @@ const createUser = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, user, "user is created"));
     } else {
+        const revciverPeerId = peerId;
         const user = await UserReciv.create({
             username,
             mode,
+            revciverPeerId
         });
 
         if (!user) {
@@ -81,7 +81,7 @@ const peerConnection = asyncHandler(async (req, res) => {
         return res.status(400).json(new ApiError(400, "Key is invalid"));
     }
     try {
-        const sender = await User.findOne({ secreateCode: key }, { new: true });
+        const sender = await User.findOne({ secreateCode: key });
         if (sender !== null) {
             return res.status(200).json(
                 new ApiResponse('200',sender,'sender data retrived succesfully')

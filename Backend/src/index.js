@@ -1,4 +1,4 @@
-import {app} from "./app.js"
+import {server} from "./app.js"
 import connect from "./db/index.js"
 import dotenv from "dotenv"
 
@@ -9,12 +9,12 @@ dotenv.config({
 
 connect()  // when a async function runs it retuns a promise
 .then(()=>{
-    app.on("error",(error)=>{
+    server.on("error",(error)=>{
         console.log(`Server connetion Error connecting with DB : ${error}`)
     })
 })
 .then(()=>{
-    app.listen(process.env.PORT || 8080,()=>{
+    server.listen(process.env.PORT || 8080,()=>{
         console.log(`⚙️  Server is running on ${process.env.PORT} Port`)
     })
 })

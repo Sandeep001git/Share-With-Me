@@ -3,42 +3,39 @@ import cors from "cors";
 import userRouter from "./routes/user.routes.js";
 import { ExpressPeerServer } from "peer";
 import http from "http";
+import { on } from "events";
 
 const app = express();
-const server = http.createServer(app);
-const expressPeerServer = new ExpressPeerServer(server, {
-    host:"localhost",
-    port:process.env.CORS_ORIGIN,
-    path: "/peerjs",
-    secure: false,
-});
 
 app.use(express.json());
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN,
-        credentials: true,
+        origin: "*", // Allow requests from all origins (replace with specific origins if needed)
+        methods: ["GET", "POST"], // Allow only GET and POST requests
+        allowedHeaders: ["Content-Type"], // Allow only specific headers
+        credentials: true, // Allow including cookies in requests
     })
 );
 
 app.use("/api/v1/", userRouter);
-app.use("/peerjs", expressPeerServer,()=>{
-    const date =new Date()
-    console.log(`running ${date.toTimeString()}`)
+
+const server = http.createServer(app);
+const expressPeerServer = new ExpressPeerServer(server, {
+    allow_discovery: true,
+    debug: true,
 });
 
-const connection = new Map();
+app.use("/peerjs", expressPeerServer);
 
-expressPeerServer.on("connection", (conn) => {
-    connection.set(conn.id, conn);
-    console.log(`Peer connected: ${conn.id}`);
-});
+const onConnection = (data) => {
+    console.info(`Client connected with id: ${data.id}`);
+};
 
-expressPeerServer.on("disconnect", (conn) => {
-    connection.delete(conn.id);
-    console.log(`Peer disconnected: ${conn.id}`);
-});
+const onDisconnect = (data) => {
+    console.info(`Client disconnected with id: ${data.id}`);
+};
 
-// Export the server and the peer server after initialization
-export { expressPeerServer , connection , app };
+expressPeerServer.on("connection", onConnection);
+expressPeerServer.on("disconnect", onDisconnect);
 
+export { expressPeerServer, server };
