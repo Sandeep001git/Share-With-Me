@@ -20,7 +20,6 @@ export const userStore = createSlice({
     },
   },
 });
-console.log(initialState)
 export const { userData, removeUser } = userStore.actions;
 
 export default userStore.reducer;

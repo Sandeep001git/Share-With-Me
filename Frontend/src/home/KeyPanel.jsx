@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { peerConnectionUser } from "../Api/index.js";
-import { peer } from "../peer/peer.js";
+import { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { peerConnectionUser } from '../Api/index.js';
+import { usePeer } from '../peer/Peer.jsx';
+import ConnectionContext from '../peer/Conn.peer.jsx';
 
 function KeyPanel() {
-    const [userInput, setUserInput] = useState("");
+    const [userInput, setUserInput] = useState('');
     const navigate = useNavigate();
+    const { setConn } = useContext(ConnectionContext);
+    const peer = usePeer();
 
     const handleInputChange = (event) => {
         setUserInput(event.target.value);
@@ -14,40 +17,31 @@ function KeyPanel() {
     const handleClick = async () => {
         try {
             const sender = await peerConnectionUser(userInput);
-            if (
-                sender &&
-                sender.data &&
-                sender.data.data &&
-                sender.data.data.senderPeerId
-            ) {
+            console.log(sender);
+            if (sender?.data?.data?.senderPeerId) {
                 const conn = peer.connect(sender.data.data.senderPeerId);
+                setConn(conn); // Set connection context
+                console.log(conn);
                 if (conn) {
-                    conn.on("open", () => {
-                        navigate("/sharedFile");
+                    conn.on('open', () => {
+                        navigate('/sharedFile');
                     });
-                    conn.on("error", (err) => {
-                        console.error("Connection error:", err);
+                    conn.on('error', (err) => {
+                        console.error('Connection error:', err);
                     });
-                    
                 } else {
-                    console.error(
-                        "Error:",
-                        sender.message || "No senderPeerId found"
-                    );
+                    console.error('Error:', sender.message || "can't connect to peer");
                 }
             }
         } catch (error) {
-            console.error("Connection error:", error);
+            console.error('Connection error:', error);
         }
     };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <div className="bg-white p-8 rounded shadow-lg w-96">
-                <label
-                    className="block text-gray-700 text-lg font-bold mb-2"
-                    htmlFor="secretCode"
-                >
+                <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="secretCode">
                     Secret Code
                 </label>
                 <input

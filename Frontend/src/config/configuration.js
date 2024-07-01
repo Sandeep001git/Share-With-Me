@@ -1,83 +1,73 @@
 import {
-  ApiError,
-  encryption,
-  ApiResponse,
-  decryption,
+    ApiError,
+    ApiResponse,
+    encryption,
+    decryption,
 } from "../util/index.js";
-import { peer } from "../peer/peer.js";
 
-const fileSharing = async (file) => {
-  try {
-    if (!file) {
-      throw new ApiError(400, "No file provided");
-    }
 
-    const encryptionAndDecryptionPassword =
-      // eslint-disable-next-line no-undef
-      process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
+const fileSharing = async (file,peer) => {
+    
+        if (!file) {
+            throw new ApiError(400, "No file provided");
+        }
+        const encryptionAndDecryptionPassword = import.meta.env
+            .VITE_ENCRYPTION_AND_DECRYPTION_PASSWARD;
+        if (!encryptionAndDecryptionPassword) {
+            throw new ApiError(500, "Encryption password not found");
+        }
 
-    if (!encryptionAndDecryptionPassword) {
-      throw new ApiError(500, "Encryption password not found");
-    }
-    const conn = peer.connectionstatechange;
-    if (!conn) {
-      throw new ApiError(500, "Sender is not connected");
-    }
+        const { encryptedFile, iv } = await encryption(
+            file,
+            encryptionAndDecryptionPassword
+        );
+        const dataToSend = JSON.stringify({ encryptedFile, iv });
+        console.log(peer)
+        peer.on('open',(conn)=>{
+          console.log(conn)
+          conn.send(dataToSend)
+        })
 
-    const encryptedFile = encryption(file, encryptionAndDecryptionPassword);
-    peer.send(encryptedFile);
-    return new ApiResponse(200, "File sent successfully");
-  } catch (error) {
-    throw new ApiError(500, "Error sending file", error);
-  }
+        return new ApiResponse(200, "File sent successfully");
 };
 
-const reciverDataStoreage = () => {
-  const encryptionAndDecryptionPassward =
-    // eslint-disable-next-line no-undef
-    process.env.ENCRYPTION_AND_DECRYPTION_PASSWARD;
-  let receivedChunks = [];
-  let totalSize = 0;
-  const conn = peer.connectionstatechange;
+const receiverDataStorage = (peer) => {
+    const encryptionAndDecryptionPassword = import.meta.env
+        .VITE_ENCRYPTION_AND_DECRYPTION_PASSWARD;
+    if (!encryptionAndDecryptionPassword) {
+        throw new ApiError(500, "Encryption password not found");
+    }
 
-  if (!conn) {
-    throw new ApiError("400", "user and sender is not connected");
-  }
+    // eslint-disable-next-line no-unused-vars
+    let receivedChunks = [];
+    // eslint-disable-next-line no-unused-vars
+    let totalSize = 0;
 
-  peer.on("data", (data) => {
-    if (data.type === "file") {
-      totalSize = data.size;
-    } else {
-      receivedChunks.push(data);
+    peer.on("data", (data) => {
+        const { encryptedFile, iv } = JSON.parse(data);
 
-      let receivedSize = receivedChunks.reduce(
-        (acc, chunk) => acc + chunk.length,
-        0
-      );
-      const file = decryption(receivedChunks, encryptionAndDecryptionPassward);
-      if (receivedSize === totalSize) {
-        const fileData = new Blob(file, {
-          type: "application/octet-stream",
+        const decryptedFile = decryption(
+            encryptedFile,
+            encryptionAndDecryptionPassword,
+            iv
+        );
+        const blob = new Blob([decryptedFile], {
+            type: "application/octet-stream",
         });
-        const fileURL = URL.createObjectURL(fileData);
 
+        const fileURL = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = fileURL;
-        a.download = data.name;
+        a.download = "receivedFile"; // Provide a name for the downloaded file
         document.body.appendChild(a);
         a.click();
-
         document.body.removeChild(a);
         URL.revokeObjectURL(fileURL);
-
-        receivedChunks = [];
-      }
-    }
-  });
+    });
 };
 
-const closeConnection = () => {
-  peer.close();
+const closeConnection = (peer) => {
+    peer.close();
 };
 
-export { fileSharing, closeConnection, reciverDataStoreage };
+export { fileSharing, closeConnection, receiverDataStorage };

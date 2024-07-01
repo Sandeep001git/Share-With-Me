@@ -2,11 +2,13 @@ import express from "express";
 import cors from "cors";
 import userRouter from "./routes/user.routes.js";
 import { ExpressPeerServer } from "peer";
-import http from "http";
+import bodyParser from "body-parser";
+import http, { Server } from "http";
 import { on } from "events";
 
 const app = express();
 
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(
     cors({
@@ -19,23 +21,5 @@ app.use(
 
 app.use("/api/v1/", userRouter);
 
-const server = http.createServer(app);
-const expressPeerServer = new ExpressPeerServer(server, {
-    allow_discovery: true,
-    debug: true,
-});
 
-app.use("/peerjs", expressPeerServer);
-
-const onConnection = (data) => {
-    console.info(`Client connected with id: ${data.id}`);
-};
-
-const onDisconnect = (data) => {
-    console.info(`Client disconnected with id: ${data.id}`);
-};
-
-expressPeerServer.on("connection", onConnection);
-expressPeerServer.on("disconnect", onDisconnect);
-
-export { expressPeerServer, server };
+export {  app };
