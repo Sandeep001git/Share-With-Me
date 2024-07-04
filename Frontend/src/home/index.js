@@ -5,6 +5,7 @@ import Loading from './Loading';
 import SharingPanel from './SharingPanel';
 import SenderKey from "./SenderKey"
 import FileReceiver from "./FileRecevier"
+import ErrorPage from "./ErrorPage";
 
 export {
     CreateUser,
@@ -13,5 +14,6 @@ export {
     Loading,
     SharingPanel,
     SenderKey,
-    FileReceiver
+    FileReceiver,
+    ErrorPage
 }

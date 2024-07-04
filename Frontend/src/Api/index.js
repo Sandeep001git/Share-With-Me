@@ -17,7 +17,6 @@ const createUser = async (username, mode, peerId) => {
 
         const data = await request.json(); //this line while work after reponse request is done || 200
 
-        console.log(data);
         return data;
     } catch (error) {
         console.log("Error Creating User ::", error);

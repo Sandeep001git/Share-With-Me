@@ -1,18 +1,21 @@
 import { File, SenderKey, Loading } from "./index.js";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { usePeer } from "../peer/Peer.jsx";
 import { fileSharing } from "../config/configuration.js";
 import { ApiError } from "../util/ApiError.js";
-import ConnectionContext from "../peer/Conn.peer.jsx";
 
 function SharingPanel() {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [waiting, setWaiting] = useState(true);
+    const [conn,setConn] = useState(null);
     const peer = usePeer();
-    const {conn} = useContext(ConnectionContext);
-    // eslint-disable-next-line no-unused-vars
+
+    // console.log("SharingPanel conn: ", conn);
 
     async function handleFileChange(event) {
+        if (!conn) {
+            throw new ApiError(401,"connection is not stablished Yet")
+        }
         const file = event.target.files[0];
         if (!file) {
             throw new ApiError(400, "No file provided");
@@ -20,7 +23,7 @@ function SharingPanel() {
         setSelectedFiles((prevFiles) => [...prevFiles, file]);
         await fileSharing(file, conn);
     }
-    
+
     const handleUploadClick = () => {
         document.getElementById("fileInput").click();
     };
@@ -31,9 +34,16 @@ function SharingPanel() {
 
     useEffect(() => {
         if (peer) {
-            peer.on("connection", () => setWaiting(false));
+            peer.on("connection", (conn) => {
+                setWaiting(false);
+                setConn(conn);
+            });
+            
+            peer.on("disconnect", () => setWaiting(true));
+
         }
-    }, [peer]);
+    }, [peer,conn]);
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <div className="container mx-auto p-4">
@@ -64,21 +74,23 @@ function SharingPanel() {
                         ) : (
                             <div className="flex flex-wrap min-h-[200px]">
                                 {selectedFiles.length === 0 ? (
-                                    <div className="w-full text-center text-gray-500">
+                                    <div className="w-full text-center font-bold text-lg content-center align-middle text-gray-500">
                                         No files selected yet.
                                     </div>
                                 ) : (
-                                        selectedFiles.map((file, index) => (
-                                            <div
-                                                key={index}
-                                                className="w-full md:w-1/2 lg:w-1/3 p-2"
-                                            >
-                                                <File
-                                                    file={file}
-                                                    onDelete={() => removeFile(file)}
-                                                />
-                                            </div>
-                                        ))
+                                    selectedFiles.map((file, index) => (
+                                        <div
+                                            key={index}
+                                            className="w-full md:w-1/2 lg:w-1/3 p-2"
+                                        >
+                                            <File
+                                                file={file}
+                                                onDelete={() =>
+                                                    removeFile(file)
+                                                }
+                                            />
+                                        </div>
+                                    ))
                                 )}
                             </div>
                         )}

@@ -1,18 +1,18 @@
-/* eslint-disable no-unused-vars */
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser } from "../Api/index.js";
 import { useDispatch } from "react-redux";
 import { userData } from "../store/UserStore.js";
-import  { usePeer } from "../peer/Peer.jsx";
+import { usePeer } from "../peer/Peer.jsx";
+import ErrorPage from "./ErrorPage.jsx";
 
 function CreateUser() {
     const navigate = useNavigate();
     const [mode, setMode] = useState("");
     const [username, setUsername] = useState("");
     const dispatch = useDispatch();
-    const  peer  = usePeer(); // Destructure the isPeerInitialized state
+    const peer = usePeer();
+    const [error, setError] = useState(null);
 
     const handleModeChange = (mode) => {
         setMode(mode);
@@ -20,17 +20,26 @@ function CreateUser() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const user = await createUser(username, mode, peer.id);
-        const storeUser = JSON.stringify(user);
-        window.localStorage.setItem('user',storeUser)
-        if (user) {
-            dispatch(userData(user));
-            navigate(mode === "sender" ? "/sender" : "/receiver");
-        } else {
-            console.error(user);
-            window.localStorage.clear();
+
+        try {
+            const user = await createUser(username, mode, peer.id);
+            if (user.success) {
+                const storeUser = JSON.stringify(user);
+                window.localStorage.setItem("user", storeUser);
+                dispatch(userData(user.data));
+                navigate(mode === "sender" ? "/sender" : "/receiver");
+            } else {
+                setError({ status: user.status, message: user.message });
+            }
+        } catch (error) {
+            setError({ status: 500, message: "Internal Server Error" });
         }
     };
+
+    if (error) {
+        return<ErrorPage  error={error}/>
+         ;
+    }
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">

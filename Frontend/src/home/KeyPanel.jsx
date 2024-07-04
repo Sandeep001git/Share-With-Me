@@ -1,13 +1,11 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { peerConnectionUser } from '../Api/index.js';
 import { usePeer } from '../peer/Peer.jsx';
-import ConnectionContext from '../peer/Conn.peer.jsx';
 
 function KeyPanel() {
     const [userInput, setUserInput] = useState('');
     const navigate = useNavigate();
-    const { setConn } = useContext(ConnectionContext);
     const peer = usePeer();
 
     const handleInputChange = (event) => {
@@ -17,17 +15,16 @@ function KeyPanel() {
     const handleClick = async () => {
         try {
             const sender = await peerConnectionUser(userInput);
-            console.log(sender);
             if (sender?.data?.data?.senderPeerId) {
-                const conn = peer.connect(sender.data.data.senderPeerId);
-                setConn(conn); // Set connection context
-                console.log(conn);
-                if (conn) {
-                    conn.on('open', () => {
+                const connection = peer.connect(sender.data.data.senderPeerId);
+                if (connection) {
+                    connection.on('open', () => {
+                        console.log('Connection opened');
                         navigate('/sharedFile');
                     });
-                    conn.on('error', (err) => {
+                    connection.on('error', (err) => {
                         console.error('Connection error:', err);
+                        navigate('/');
                     });
                 } else {
                     console.error('Error:', sender.message || "can't connect to peer");
