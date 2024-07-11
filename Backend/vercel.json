@@ -1,14 +1,9 @@
 {
     "version":"2.6.0",
+    "cleanUrls": true,
+    "framework": "vite",
     "builds":[{
         "src":"./index.js",
         "use":"@varcel/node"
-    }],
-    "routes":[{
-        "src":"/routes/user.routes.js",
-        "dest":{
-            "r1":"/peerjs/create/user",
-            "r2":"/connect/user"
-        }
     }]
 }
