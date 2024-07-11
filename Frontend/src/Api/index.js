@@ -4,7 +4,7 @@ import axios from "axios";
 const createUser = async (username, mode, peerId) => {
     try {
         const request = await fetch(
-            "http://localhost:8000/api/v1/peerjs/create/user",
+            "https://share-with-me.vercel.app/api/v1/peerjs/create/user",
             {
                 method: "post",
                 headers: {
@@ -26,7 +26,7 @@ const createUser = async (username, mode, peerId) => {
 const peerConnectionUser = async (key) => {
     try {
         const request = await axios.post(
-            "http://localhost:8000/api/v1/connect/user",
+            "https://share-with-me.vercel.app/api/v1/connect/user",
             {
                 key,
             }

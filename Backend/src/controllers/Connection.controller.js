@@ -83,7 +83,7 @@ const peerConnection = asyncHandler(async (req, res) => {
     try {
         const sender = await User.findOne({ secreateCode: key });
         if (sender !== null) {
-            return res.status(200).json(
+            return res.json(
                 new ApiResponse('200',sender,'sender data retrived succesfully')
             )
         } else {

@@ -1,14 +1,14 @@
 /* eslint-disable react/prop-types */
-// PeerContext.js
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Peer } from 'peerjs';
 
 const PeerContext = createContext();
 
-export const usePeer = () => useContext(PeerContext);
+export const usePeerContext = () => useContext(PeerContext);
 
 export const PeerProvider = ({ children }) => {
     const [peer, setPeer] = useState(null);
+    const [conn, setConn] = useState(null);
 
     useEffect(() => {
         const storedPeerId = sessionStorage.getItem('peerId');
@@ -47,7 +47,7 @@ export const PeerProvider = ({ children }) => {
     }, []);
 
     return (
-        <PeerContext.Provider value={peer}>
+        <PeerContext.Provider value={{ peer, conn, setConn }}>
             {children}
         </PeerContext.Provider>
     );

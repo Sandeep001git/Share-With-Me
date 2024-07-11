@@ -4,7 +4,6 @@ import KeyPanel from './KeyPanel';
 import Loading from './Loading';
 import SharingPanel from './SharingPanel';
 import SenderKey from "./SenderKey"
-import FileReceiver from "./FileRecevier"
 import ErrorPage from "./ErrorPage";
 
 export {
@@ -14,6 +13,5 @@ export {
     Loading,
     SharingPanel,
     SenderKey,
-    FileReceiver,
     ErrorPage
 }

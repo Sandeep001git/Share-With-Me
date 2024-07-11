@@ -12,8 +12,8 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(
     cors({
-        origin: "*", // Allow requests from all origins (replace with specific origins if needed)
-        methods: ["GET", "POST"], // Allow only GET and POST requests
+        origin: "https://share-with-me.vercel.app/",
+        methods: ["GET", "POST","PUT","DELETE"], // Allow only GET and POST requests
         allowedHeaders: ["Content-Type"], // Allow only specific headers
         credentials: true, // Allow including cookies in requests
     })

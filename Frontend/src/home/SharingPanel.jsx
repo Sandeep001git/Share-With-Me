@@ -1,20 +1,17 @@
-import { File, SenderKey, Loading } from "./index.js";
 import { useState, useEffect } from "react";
-import { usePeer } from "../peer/Peer.jsx";
+import { usePeerContext } from "../peer/Peer.jsx";
 import { fileSharing } from "../config/configuration.js";
 import { ApiError } from "../util/ApiError.js";
+import { File, SenderKey, Loading } from "./index.js";
 
 function SharingPanel() {
+    const { peer, conn, setConn } = usePeerContext();
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [waiting, setWaiting] = useState(true);
-    const [conn,setConn] = useState(null);
-    const peer = usePeer();
-
-    // console.log("SharingPanel conn: ", conn);
 
     async function handleFileChange(event) {
         if (!conn) {
-            throw new ApiError(401,"connection is not stablished Yet")
+            throw new ApiError(401, "Connection is not established yet");
         }
         const file = event.target.files[0];
         if (!file) {
@@ -34,24 +31,23 @@ function SharingPanel() {
 
     useEffect(() => {
         if (peer) {
-            peer.on("connection", (conn) => {
+            peer.on("connection", (connection) => {
                 setWaiting(false);
-                setConn(conn);
+                connection.on('open', () => {
+                    setConn(connection);
+                });
             });
-            
-            peer.on("disconnect", () => setWaiting(true));
 
+            peer.on("disconnect", () => setWaiting(true));
         }
-    }, [peer,conn]);
+    }, [peer, conn, setConn]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <div className="container mx-auto p-4">
                 <div className="flex justify-between mb-4">
                     <div className="p-4 bg-white rounded-lg shadow-md w-1/2">
-                        <h2 className="text-xl font-bold mb-2">
-                            Upload a File
-                        </h2>
+                        <h2 className="text-xl font-bold mb-2">Upload a File</h2>
                         <input
                             type="file"
                             id="fileInput"
@@ -85,9 +81,7 @@ function SharingPanel() {
                                         >
                                             <File
                                                 file={file}
-                                                onDelete={() =>
-                                                    removeFile(file)
-                                                }
+                                                onDelete={() => removeFile(file)}
                                             />
                                         </div>
                                     ))
