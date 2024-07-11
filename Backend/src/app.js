@@ -12,12 +12,14 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(
     cors({
-        origin: "https://share-with-me.vercel.app/",
-        methods: ["GET", "POST","PUT","DELETE"], // Allow only GET and POST requests
-        allowedHeaders: ["Content-Type"], // Allow only specific headers
-        credentials: true, // Allow including cookies in requests
+        origin: ["https://share-with-me.vercel.app", "http://localhost:5173"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Accept", "Origin", "application/json"],
+        credentials: true,
     })
 );
+app.options('*', cors());
+app.use(express.static('public'));
 
 app.use("/api/v1/", userRouter);
 
