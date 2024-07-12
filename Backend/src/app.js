@@ -10,8 +10,8 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(express.json());
-// Allow requests from specific origin
-const allowedOrigins = ['https://share-with-me.vercel.app'];
+
+const allowedOrigins = ['https://share-with-me.vercel.app','http://localhost:5173'];
 
 // Configure CORS options
 const corsOptions = {
@@ -26,10 +26,7 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization'],  // Specify allowed headers
 };
 
-// Use CORS middleware
 app.use(cors(corsOptions));
-
-app.options('*', cors());
 app.use(express.static('public'));
 app.use("/api/v1/", userRouter);
 
