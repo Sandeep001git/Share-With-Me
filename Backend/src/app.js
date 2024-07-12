@@ -12,6 +12,8 @@ app.use(bodyParser.json());
 app.use(express.json());
 // Allow requests from specific origin
 const allowedOrigins = ['https://share-with-me.vercel.app'];
+
+// Configure CORS options
 const corsOptions = {
     origin: function(origin, callback) {
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
@@ -19,9 +21,12 @@ const corsOptions = {
         } else {
             callback(new Error('Not allowed by CORS'));
         }
-    }
+    },
+    methods: ['GET', 'POST'],  // Specify allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Specify allowed headers
 };
 
+// Use CORS middleware
 app.use(cors(corsOptions));
 
 app.options('*', cors());
