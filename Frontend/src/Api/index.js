@@ -9,7 +9,7 @@ const createUser = async (username, mode, peerId) => {
                 method: "post",
                 headers: {
                     "Content-Type": "application/json",
-                    Accept: "application/json",
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({ username, mode, peerId }),
             }
