@@ -22,7 +22,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-const allowedOrigins = ['https://share-with-me.vercel.app/', 'https://share-with-me.vercel/' ,'http://localhost:5173'];
+const allowedOrigins = ['https://share-with-me.vercel.app','http://localhost:5173'];
 
 // Configure CORS options
 const corsOptions = {
@@ -33,6 +33,7 @@ const corsOptions = {
             callback(null, true);
         } else {
             console.log('Origin not allowed:', origin);
+            console.log('Origin ', allowedOrigins);
             callback(new Error('Not allowed by CORS'));
         }
     },

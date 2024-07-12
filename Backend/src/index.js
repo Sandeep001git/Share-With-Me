@@ -23,7 +23,7 @@ const startServer = async () => {
             setTimeout(() => {
                 console.error('Forcefully shutting down');
                 process.exit(1);
-            }, 10000); // Force shutdown after 10 seconds
+            }, 50000); // Force shutdown after 05 seconds
         };
 
         process.on('SIGTERM', shutdown);
