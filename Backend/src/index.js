@@ -16,7 +16,6 @@ connect()  // when a async function runs it retuns a promise
 .then(()=>{
     app.listen(process.env.PORT || 8080,()=>{
         console.log(`⚙️  Server is running on ${process.env.PORT} Port`)
-        return `<h1>surver is running </h1>`
     })
 })
 .catch((err)=>console.log(err))
