@@ -1,15 +1,14 @@
 import { useSelector } from "react-redux";
 import { FaRegCopy } from "react-icons/fa";
-import ErrorPage from "./ErrorPage";
 
 function SenderKey() {
-    const error ={
-        status:400,
-        massage:"senderCode is not available"
-    }
+    
 
     const user = useSelector((state) => state.User);
     const {secreateCode} = user[0].data
+    if(!secreateCode){
+        throw new Error()
+    }
     const copyToClipboard = () => {
         navigator.clipboard.writeText(secreateCode);
     };
