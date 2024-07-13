@@ -22,28 +22,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-const allowedOrigins = ['https://share-with-me.vercel.app', 'http://localhost:5173'];
+// const allowedOrigins = ['https://share-with-me.vercel.app', 'http://localhost:5173'];
 
-// Configure CORS options
-const corsOptions = {
-    origin: function (origin, callback) {
-        console.log('Origin received:', origin); // Log the received origin
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            console.log('Origin allowed:', origin);
-            callback(null, true);
-        } else {
-            console.log('Origin not allowed:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
+// // Configure CORS options
+// const corsOptions = {
+//     origin: function (origin, callback) {
+//         console.log('Origin received:', origin); // Log the received origin
+//         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+//             console.log('Origin allowed:', origin);
+//             callback(null, true);
+//         } else {
+//             console.log('Origin not allowed:', origin);
+//             callback(new Error('Not allowed by CORS'));
+//         }
+//     },
+//     methods: ['GET', 'POST'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+// };
 
-app.use(cors(corsOptions));
+app.use(cors({
+    origin:'*',
+    methods:  ['GET', 'POST'],
+}));
 
 // Serve static files
-app.use(express.static('public'));
+app.use(express.static('/public'));
 
 // API routes
 app.use("/api/v1/", userRouter);
