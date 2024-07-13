@@ -3,16 +3,19 @@ import {
     // ApiResponse,
     encryption,
 } from "../util/index.js";
-
+// Function to handle file sharing
 const fileSharing = async (file, conn) => {
     try {
         if (!file) {
             throw new ApiError(400, "No file provided");
         }
 
-        const CHUNK_SIZE = 64 * 1024;
+        // Calculate chunk size and total number of chunks
+        const CHUNK_SIZE = 16 * 1024; // 16 KB
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-        const salt = crypto.getRandomValues(new Uint8Array(16)); // Generate a random salt
+
+        // Generate a random salt for encryption
+        const salt = crypto.getRandomValues(new Uint8Array(16));
 
         if (!conn || !conn.open) {
             throw new ApiError(500, "Connection not open");
@@ -41,8 +44,9 @@ const fileSharing = async (file, conn) => {
                 const chunk = file.slice(start, end);
 
                 try {
+                    // Encrypt the chunk
                     const { encryptedFile, iv } = await encryption(chunk, encAndDecPass);
-
+                    console.log(encryptedFile)
                     if (conn.open) {
                         conn.send({
                             type: 'chunk',
@@ -50,8 +54,9 @@ const fileSharing = async (file, conn) => {
                             data: Array.from(new Uint8Array(encryptedFile)),
                             chunkIndex: chunkIndex,
                         });
-
+                        
                         // Throttle sending to avoid overwhelming the connection
+                        console.log(encryptedFile)
                         await new Promise(resolve => setTimeout(resolve, 200));
                     } else {
                         throw new ApiError(500, "Connection is closed");

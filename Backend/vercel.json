@@ -1,11 +1,10 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "framework": "vite",
   "builds": [
     {
-      "src": "./index.js",
-      "use": "@varcel/node"
+      "src": "index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -15,7 +14,11 @@
     },
     {
       "src": "/api/v1/(.*)",
-      "dest": "/api/v1/$1"
+      "dest": "/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
     }
   ],
   "headers": [
@@ -28,7 +31,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://share-with-me.verce"
+          "value": "https://share-with-me.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",

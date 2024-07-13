@@ -9,26 +9,7 @@ dotenv.config({
 const startServer = async () => {
     try {
         await connect();
-        const server = app.listen(process.env.PORT || 8080, () => {
-            console.log(`⚙️  Server is running on port ${process.env.PORT || 8080}`);
-        });
-
-        // Handle graceful shutdown
-        const shutdown = () => {
-            server.close(() => {
-                console.log('🛑 Server closed');
-                process.exit(0);
-            });
-
-            setTimeout(() => {
-                console.error('Forcefully shutting down');
-                process.exit(1);
-            }, 50000); // Force shutdown after 05 seconds
-        };
-
-        process.on('SIGTERM', shutdown);
-        process.on('SIGINT', shutdown);
-
+        console.log(`⚙️  Server is ready`);
     } catch (error) {
         console.error(`Error starting server: ${error.message}`);
         process.exit(1);
@@ -36,3 +17,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export default app; // Export the app for Vercel

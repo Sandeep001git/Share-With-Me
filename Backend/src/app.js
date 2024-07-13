@@ -33,7 +33,7 @@ const corsOptions = {
             callback(null, true);
         } else {
             console.log('Origin not allowed:', origin);
-            console.log('Origin ', allowedOrigins);
+            console.log('Allowed Origins', allowedOrigins);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -62,11 +62,5 @@ app.use("/api/v1/", userRouter);
 
 // Logging
 app.use(morgan('combined'));
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
 
 export { app };
