@@ -22,7 +22,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-const allowedOrigins = ['https://share-with-me.vercel.app','http://localhost:5173'];
+const allowedOrigins = ['https://share-with-me.vercel.app', 'http://localhost:5173'];
 
 // Configure CORS options
 const corsOptions = {
@@ -33,7 +33,6 @@ const corsOptions = {
             callback(null, true);
         } else {
             console.log('Origin not allowed:', origin);
-            console.log('Allowed Origins', allowedOrigins);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -42,17 +41,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Explicitly set CORS headers
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Methods', 'GET,POST');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-    next();
-});
 
 // Serve static files
 app.use(express.static('public'));
