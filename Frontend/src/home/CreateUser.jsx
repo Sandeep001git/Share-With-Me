@@ -35,11 +35,9 @@ function CreateUser() {
             setError({ status: 500, message: "Internal Server Error" });
         }
     };
-
     if (error) {
         return <ErrorPage error={error} />;
     }
-
     return (
         <div className="flex flex-col min-h-screen bg-gray-100">
             <div className="flex-grow flex items-center justify-center">
@@ -105,9 +103,17 @@ function CreateUser() {
                 </div>
             </div>
             <footer className="text-sm text-center p-4 bg-gray-200">
-                <a target="_blank" href="https://icons8.com/icon/cwFcT66k30rn/data-transfer-and-syncing-arrows-logotype-isolated-on-a-white-background">
-                    Data transfer and syncing arrows Logotype isolated on a white background
-                </a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+                <a
+                    target="_blank"
+                    href="https://icons8.com/icon/cwFcT66k30rn/data-transfer-and-syncing-arrows-logotype-isolated-on-a-white-background"
+                >
+                    Data transfer and syncing arrows Logotype isolated on a
+                    white background
+                </a>{" "}
+                icon by{" "}
+                <a target="_blank" href="https://icons8.com">
+                    Icons8
+                </a>
             </footer>
         </div>
     );

@@ -5,7 +5,6 @@ function File({ file, onDelete }) {
     let fileUrl = "";
 
     try {
-        console.log(file)
         if (file.url) {
           fileUrl = file.url;
         } else if (file instanceof Blob) {
@@ -39,11 +38,11 @@ function File({ file, onDelete }) {
             <div className="mt-4 flex justify-between">
                 <a
                     href={fileUrl}
-                    target="_blank"
+                    download
                     rel="noopener noreferrer"
                     className="text-indigo-600 hover:text-indigo-900"
                 >
-                    View
+                    download
                 </a>
                 <button
                     onClick={() => onDelete(file)}

@@ -1,39 +1,58 @@
 import { useState, useEffect } from "react";
 import { usePeerContext } from "../peer/Peer.jsx";
-import { fileSharing } from "../config/configuration.js";
+import { closeConnection, fileSharing } from "../config/configuration.js";
 import { ApiError } from "../util/ApiError.js";
 import { File, SenderKey, Loading } from "./index.js";
+import { deleteUser } from "../Api/index.js";
 
 function SharingPanel() {
     const { peer, conn, setConn } = usePeerContext();
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [waiting, setWaiting] = useState(true);
+    const [progress, setProgress] = useState(0);
+    const [isAborted, setisAborted] = useState(false);
 
     async function handleFileChange(event) {
         if (!conn) {
             throw new ApiError(401, "Connection is not established yet");
         }
         const file = event.target.files[0];
-        if (!file) {
-            throw new ApiError(400, "No file provided");
-        }
+        
         setSelectedFiles((prevFiles) => [...prevFiles, file]);
-        await fileSharing(file, conn);
+        setisAborted(false)
+        await fileSharing(file, conn, setProgress, false);
     }
 
     const handleUploadClick = () => {
         document.getElementById("fileInput").click();
     };
 
-    const removeFile = (fileToRemove) => {
+    const removeFile = async (fileToRemove) => {
         setSelectedFiles(selectedFiles.filter((file) => file !== fileToRemove));
+        setisAborted(true);
     };
+
+    const newConnection = () => {
+        setConn(null); // Close current connection
+        setSelectedFiles([]); // Clear selected files
+        setProgress(0); // Reset progress
+        setWaiting(true); // Set waiting state to true
+        setisAborted(false); // Reset aborted state if needed
+        closeConnection(conn)
+        deleteUser()
+    };
+
+    useEffect(() => {
+        if (selectedFiles.length > 0 && conn) {
+            fileSharing(selectedFiles[0], conn, setProgress, isAborted);
+        }
+    }, [selectedFiles, conn, isAborted, setProgress]);
 
     useEffect(() => {
         if (peer) {
             peer.on("connection", (connection) => {
                 setWaiting(false);
-                connection.on('open', () => {
+                connection.on("open", () => {
                     setConn(connection);
                 });
             });
@@ -47,7 +66,9 @@ function SharingPanel() {
             <div className="container mx-auto p-4">
                 <div className="flex justify-between mb-4">
                     <div className="p-4 bg-white rounded-lg shadow-md w-1/2">
-                        <h2 className="text-xl font-bold mb-2">Upload a File</h2>
+                        <h2 className="text-xl font-bold mb-2">
+                            Upload a File
+                        </h2>
                         <input
                             type="file"
                             id="fileInput"
@@ -81,13 +102,31 @@ function SharingPanel() {
                                         >
                                             <File
                                                 file={file}
-                                                onDelete={() => removeFile(file)}
+                                                onDelete={() =>
+                                                    removeFile(file)
+                                                }
                                             />
+                                            <div className="w-full bg-gray-200 rounded-full mt-2">
+                                                <div
+                                                    className="bg-indigo-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
+                                                    style={{
+                                                        width: `${progress}%`,
+                                                    }}
+                                                >
+                                                    {progress}%
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
                                 )}
                             </div>
                         )}
+                        <button
+                            onClick={()=>newConnection()}
+                            className="mt-4 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        >
+                            New Connection
+                        </button>
                     </div>
                 </div>
             </div>

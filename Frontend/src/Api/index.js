@@ -1,10 +1,12 @@
 import axios from "axios";
+import { ApiError } from "../util";
 
 // Without axios
 const createUser = async (username, mode, peerId) => {
     try {
         const response = await axios.post(
-            "https://share-with-me-server.vercel.app/api/v1/peerjs/create/user",
+            // "https://share-with-me-server.vercel.app/api/v1/peerjs/create/user",
+            "http://localhost:8000/api/v1/peerjs/create/user",
             { username, mode, peerId },
             {
                 headers: {
@@ -26,7 +28,8 @@ const createUser = async (username, mode, peerId) => {
 const peerConnectionUser = async (key) => {
     try {
         const request = await axios.post(
-            "https://share-with-me-server.vercel.app/api/v1/connect/user",
+            // "https://share-with-me-server.vercel.app/api/v1/connect/user",
+            "http://localhost:8000/api/v1/connect/user",
             {
                 key,
             }
@@ -37,4 +40,19 @@ const peerConnectionUser = async (key) => {
     }
 };
 
-export { createUser, peerConnectionUser };
+const deleteUser = async (key) => {
+    try {
+        const request = await axios.post(
+            "http://localhost:8000/api/v1/user/delete",
+            {
+                key,
+            }
+        );
+        return request;
+    } catch (error) {
+        console.log(error)
+        throw error;
+    }
+};
+
+export { createUser, peerConnectionUser, deleteUser };

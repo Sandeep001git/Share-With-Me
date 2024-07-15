@@ -1,5 +1,5 @@
 import { app } from './app.js';
-import connect from './src/db/index.js';
+import connect from './db/index.js';
 import dotenv from 'dotenv';
 
 dotenv.config({
@@ -9,7 +9,9 @@ dotenv.config({
 const startServer = async () => {
     try {
         await connect();
-        console.log('⚙️  Server is ready');
+        app.listen(process.env.PORT || 3000 , ()=>{
+            console.log('⚙️  Server is ready');
+        })
     } catch (error) {
         console.error(`Error starting server: ${error.message}`);
         process.exit(1);
