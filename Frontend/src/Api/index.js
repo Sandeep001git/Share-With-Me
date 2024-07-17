@@ -1,5 +1,4 @@
 import axios from "axios";
-import { ApiError } from "../util";
 
 // Without axios
 const createUser = async (username, mode, peerId) => {
@@ -40,12 +39,26 @@ const peerConnectionUser = async (key) => {
     }
 };
 
-const deleteUser = async (key) => {
+const deleteSender = async (id) => {
     try {
         const request = await axios.post(
-            "http://localhost:8000/api/v1/user/delete",
+            "http://localhost:8000/api/v1/sender/delete",
             {
-                key,
+                id,
+            }
+        );
+        return request;
+    } catch (error) {
+        console.log(error)
+        throw error;
+    }
+};
+const deleteReciver = async (id) => {
+    try {
+        const request = await axios.post(
+            "http://localhost:8000/api/v1/reciver/delete",
+            {
+                id,
             }
         );
         return request;
@@ -55,4 +68,4 @@ const deleteUser = async (key) => {
     }
 };
 
-export { createUser, peerConnectionUser, deleteUser };
+export { createUser, peerConnectionUser, deleteSender , deleteReciver };

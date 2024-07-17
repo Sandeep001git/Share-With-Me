@@ -6,7 +6,7 @@ const initialState = {
 
 export const userStore = createSlice({
   name: "User",
-  initialState, // Corrected variable name
+  initialState,
   reducers: {
     userData: (state, action) => {
       const user = {
@@ -16,10 +16,10 @@ export const userStore = createSlice({
       state.User.push(user);
     },
     removeUser: (state, action) => {
-      state.User = state.User.filter((user) => user.id !== action.payload); // Corrected spelling of filter method
+      state.User = state.User.filter((user) => user.data._id !== action.payload._id);
     },
   },
 });
-export const { userData, removeUser } = userStore.actions;
 
+export const { userData, removeUser } = userStore.actions;
 export default userStore.reducer;

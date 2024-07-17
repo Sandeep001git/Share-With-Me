@@ -47,7 +47,7 @@ export const PeerProvider = ({ children }) => {
     }, []);
 
     return (
-        <PeerContext.Provider value={{ peer, conn, setConn }}>
+        <PeerContext.Provider value={{ peer, conn, setConn , setPeer }}>
             {children}
         </PeerContext.Provider>
     );

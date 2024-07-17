@@ -1,18 +1,56 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser } from "../Api/index.js";
 import { useDispatch } from "react-redux";
-import { userData } from "../store/UserStore.js";
+import { userData , removeUser } from "../store/UserStore.js";
 import { usePeerContext } from "../peer/Peer.jsx";
 import ErrorPage from "./ErrorPage.jsx";
+import Peer from "peerjs";
+import { useAppContext } from "../peer/Page.context.jsx";
+import { useSelector } from "react-redux";
 
 function CreateUser() {
     const navigate = useNavigate();
     const [mode, setMode] = useState("");
     const [username, setUsername] = useState("");
     const dispatch = useDispatch();
-    const { peer } = usePeerContext();
+    const user = useSelector((state)=>state.User);
+    const { peer, setPeer } = usePeerContext();
     const [error, setError] = useState(null);
+    const { isFirstLoad, resetApp } = useAppContext();
+
+    useEffect(() => {
+
+        if (isFirstLoad) {
+            resetApp();
+        } else if (!isFirstLoad && (!peer || !peer.id)) {            
+            const initializePeer = async () => {
+                try {
+                    dispatch(removeUser(user[0].data))
+                    console.log(user)
+                    const newPeer = new Peer();
+                    newPeer.on("open", (id) => {
+                        console.log(`Peer ID: ${id}`);
+                        sessionStorage.setItem("peerId", id);
+                    });
+                    newPeer.on("error", (err) => {
+                        console.error("PeerJS Error:", err);
+                    });
+
+                    setPeer(newPeer);
+                } catch (error) {
+                    console.error("Error initializing peer:", error);
+                    setError({
+                        status: 500,
+                        message: "Error initializing Peer",
+                    });
+                }
+            };
+
+            initializePeer();
+        }
+
+    }, [isFirstLoad, peer?.id, setPeer, resetApp]);
 
     const handleModeChange = (mode) => {
         setMode(mode);
@@ -27,7 +65,7 @@ function CreateUser() {
                 const storeUser = JSON.stringify(user);
                 window.localStorage.setItem("user", storeUser);
                 dispatch(userData(user.data));
-                navigate(mode === "sender" ? "/sender" : "/receiver");
+                navigate(mode === "sender" ? "/sender" : "/receiver")
             } else {
                 setError({ status: user.status, message: user.message });
             }
@@ -35,9 +73,11 @@ function CreateUser() {
             setError({ status: 500, message: "Internal Server Error" });
         }
     };
+
     if (error) {
         return <ErrorPage error={error} />;
     }
+
     return (
         <div className="flex flex-col min-h-screen bg-gray-100">
             <div className="flex-grow flex items-center justify-center">

@@ -90,11 +90,47 @@ const peerConnection = asyncHandler(async (req, res) => {
             return res.status(404).json(new ApiError(404, "Sender not found"));
         }
     } catch (error) {
-        throw new ApiError(505, "cannot connect to peer server : ", error);
+        throw new ApiError(505, "Cannot connect to peer server : ", error);
     }
 });
+
+const deleteSender = asyncHandler(async (req,res)=>{
+    const {id} = req.body
+    if(!id){
+        return res.status(400).json(new ApiResponse(300, "_id is required"));
+    }
+    try{
+        const response = await User.deleteOne({_id:(id)})
+        if (response.deletedCount > 0) {
+            return res.json(new ApiResponse(200, "Sender is successfully deleted"));
+        } else {
+            return res.status(404).json(new ApiResponse(404, "Sender not found"));
+        }
+    }catch(error){
+        throw new ApiError(505, "Cannot delete the sender on server side : ", error);
+    }
+})
+
+const deleteReciver = asyncHandler(async (req,res)=>{
+    const {id} = req.body
+    if(!id){
+        return res.status(400).json(new ApiResponse(300, "_id is required"));
+    }
+    try{
+        const response = await UserReciv.deleteOne({_id:(id)})
+        if (response.deletedCount > 0) {
+            return res.json(new ApiResponse(200, "Reciver is successfully deleted"));
+        } else {
+            return res.status(404).json(new ApiResponse(404, "Reciver not found"));
+        }
+    }catch(error){
+        throw new ApiError(505, "Cannot delete the reciver on server side : ", error);
+    }
+})
 
 export {
     createUser,
     peerConnection,
+    deleteSender,
+    deleteReciver
 };

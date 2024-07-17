@@ -1,14 +1,14 @@
 import { ApiError } from "../util/index.js";
 
 // Function to handle file sharing
-const fileSharing = async (file, conn, setProgress, isAborted = false) => {
+const fileSharing = async (file, conn, setProgress, isAbortedRef) => {
     try {
         if (!file) {
             throw new ApiError(400, "No file provided");
         }
 
         // Calculate chunk size and total number of chunks
-        const CHUNK_SIZE = 16 * 1024; // 16 KB
+        const CHUNK_SIZE = 64 * 1024; // 16 KB
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
         if (!conn || !conn.open) {
@@ -27,8 +27,9 @@ const fileSharing = async (file, conn, setProgress, isAborted = false) => {
         // Function to send chunks sequentially
         const sendChunks = async () => {
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-                if (isAborted) {
+                if (isAbortedRef.current) {
                     console.log("File Sharing is Aborted");
+                    conn.send({type:'aborted'})
                     return;
                 }
                 const start = chunkIndex * CHUNK_SIZE;

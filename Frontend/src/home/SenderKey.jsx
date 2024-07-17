@@ -1,11 +1,8 @@
-import { useSelector } from "react-redux";
 import { FaRegCopy } from "react-icons/fa";
 
-function SenderKey() {
+// eslint-disable-next-line react/prop-types
+function SenderKey({secreateCode}) {
     
-
-    const user = useSelector((state) => state.User);
-    const {secreateCode} = user[0].data
     if(!secreateCode){
         throw new Error()
     }

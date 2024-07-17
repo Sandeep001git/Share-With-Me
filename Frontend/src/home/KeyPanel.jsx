@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { peerConnectionUser } from "../Api/index.js";
+import { peerConnectionUser, deleteReciver } from "../Api/index.js";
 import { usePeerContext } from "../peer/Peer.jsx";
+import { closeConnection } from "../config/configuration.js";
 import File from "./File";
+import { useNavigate } from "react-router-dom";
 
 function KeyPanel() {
     const [userInput, setUserInput] = useState("");
     const [isConnected, setIsConnected] = useState(false);
-    const { peer } = usePeerContext();
+    const { peer, setConn, conn } = usePeerContext();
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [receivedChunks, setReceivedChunks] = useState([]);
     const [fileData, setFileData] = useState({
@@ -16,18 +18,24 @@ function KeyPanel() {
         totalChunks: 0,
     });
     const [progress, setProgress] = useState(0);
+    const [id, setId] = useState("");
+    const navigate = useNavigate();
 
     const handleClick = async () => {
         try {
             const sender = await peerConnectionUser(userInput);
             const { senderPeerId } = sender.data.data;
+            const { data } = JSON.parse(window.localStorage.getItem("user"));
+            const id = data._id;
+            setId(id);
             if (senderPeerId) {
                 const connection = peer.connect(senderPeerId);
+                setConn(connection);
                 if (connection) {
                     connection.on("open", () => {
                         setIsConnected(true);
                     });
-                    connection.on("data", (message) => {
+                    connection.on("data", async (message) => {
                         if (message.type === "metadata") {
                             console.log("Metadata received:", message);
                             setFileData({
@@ -47,19 +55,15 @@ function KeyPanel() {
                                 updatedChunks[chunkIndex] = dataArray;
                                 return updatedChunks;
                             });
-                            // Update progress
-                            console.log(fileData.totalChunks);
-                            if (
-                                fileData.totalChunks &&
-                                chunkIndex !== undefined
-                            ) {
-                                const chunckVal = chunkIndex + 1;
-                                const progress = Math.round(
-                                    (chunckVal / fileData.totalChunks) * 100
-                                );
-                                setProgress(progress);
-                                console.log(chunckVal);
-                            }
+                        } else if (message.type === "aborted") {
+                            setSelectedFiles((prevFiles) => prevFiles.slice(0, -1));
+                            setFileData({
+                                fileName: "",
+                                fileType: "",
+                                fileSize: "",
+                                totalChunks: 0,
+                            });
+                            setProgress(0);
                         }
                     });
                     connection.on("error", (err) => {
@@ -79,8 +83,17 @@ function KeyPanel() {
     };
 
     useEffect(() => {
-        handleClick(); // Call handleClick directly in useEffect
-    }, [userInput, peer]);
+        if (fileData.totalChunks > 0) {
+            const lastChunkIndex = receivedChunks.length - 1;
+            if (lastChunkIndex >= 0) {
+                const totalchunks = fileData.totalChunks;
+                const chunkVal = lastChunkIndex + 1;
+                const progress = Math.round((chunkVal / totalchunks) * 100);
+                setProgress(progress);
+                console.log(`Progress: ${progress}%`);
+            }
+        }
+    }, [receivedChunks, fileData]);
 
     useEffect(() => {
         if (isTransferComplete()) {
@@ -88,8 +101,8 @@ function KeyPanel() {
                 type: fileData.fileType,
             });
             const fileUrl = URL.createObjectURL(fileBlob);
-            setSelectedFiles((prevFile) => [
-                ...prevFile,
+            setSelectedFiles((prevFiles) => [
+                ...prevFiles,
                 {
                     ...fileData,
                     url: fileUrl,
@@ -98,8 +111,14 @@ function KeyPanel() {
                 },
             ]); // Assuming only one file for simplicity
             console.log("File received and reconstructed:", fileBlob);
+            setFileData({
+                fileName: "",
+                fileType: "",
+                fileSize: "",
+                totalChunks: 0,
+            });
         }
-    }, [receivedChunks, fileData]);
+    }, [receivedChunks]);
 
     const handleInputChange = (event) => {
         setUserInput(event.target.value);
@@ -116,14 +135,45 @@ function KeyPanel() {
         );
     }
 
+    const restartNewConnection = async () => {
+        const response = await deleteReciver(id);
+        console.log(response);
+        if (response) {
+            setIsConnected(false);
+            setUserInput("");
+            setSelectedFiles([]);
+            setReceivedChunks([]);
+            setFileData({
+                fileName: "",
+                fileType: "",
+                fileSize: "",
+                totalChunks: 0,
+            });
+            setProgress(0);
+            if (conn != null) {
+                closeConnection(conn);
+            }
+            peer.destroy();
+            navigate("/");
+        }
+    };
+
     return (
         <>
             {isConnected ? (
                 <div className="flex items-center justify-center min-h-screen bg-gray-100">
                     <div className="bg-white p-8 rounded shadow-md w-2/3">
-                        <h2 className="text-2xl font-bold mb-6">
-                            File Receiver
-                        </h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">
+                                File Receiver
+                            </h2>
+                            <button
+                                onClick={restartNewConnection}
+                                className="ml-auto px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                            >
+                                New Connection
+                            </button>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {selectedFiles.length === 0 ? (
                                 <div className="w-full text-center font-bold text-lg content-center align-middle text-gray-500">
