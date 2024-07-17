@@ -1,15 +1,14 @@
-/* eslint-disable react/prop-types */
+import PropTypes from "prop-types";
 import { ApiError } from "../util/ApiError.js";
 
-function File({ file, onDelete }) {
+function File({ file, default_img, onDelete }) {
     let fileUrl = "";
 
     try {
         if (file.url) {
-          fileUrl = file.url;
+            fileUrl = file.url;
         } else if (file instanceof Blob) {
-          fileUrl = URL.createObjectURL(file);
-          console.log('fileUrl is created ',fileUrl)
+            fileUrl = URL.createObjectURL(file);
         } else {
             throw new ApiError(400, "Invalid file type provided");
         }
@@ -23,9 +22,9 @@ function File({ file, onDelete }) {
             <div className="flex items-center">
                 <div className="flex-shrink-0">
                     <img
-                        src={fileUrl}
-                        alt={file.name}
-                        className="w-12 h-12 object-cover"
+                        src={fileUrl || default_img}
+                        alt={default_img}
+                        className="w-16 h-16 object-cover"
                     />
                 </div>
                 <div className="ml-4">
@@ -54,5 +53,11 @@ function File({ file, onDelete }) {
         </div>
     );
 }
+
+File.propTypes = {
+    file: PropTypes.object.isRequired,
+    default_img: PropTypes.string.isRequired,
+    onDelete: PropTypes.func.isRequired,
+};
 
 export default File;

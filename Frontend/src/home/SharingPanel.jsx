@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { usePeerContext } from "../peer/Peer.jsx";
 import { closeConnection, fileSharing } from "../config/configuration.js";
-import { ApiError } from "../util/ApiError.js";
-import { File, SenderKey, Loading } from "./index.js";
+import { File, SenderKey, Loading, ErrorPage } from "./index.js";
 import { deleteSender } from "../Api/index.js";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import fileImage from "../assets/file_send.png";
 
 function SharingPanel() {
     const { peer, conn, setConn } = usePeerContext();
@@ -14,28 +14,34 @@ function SharingPanel() {
     const [progress, setProgress] = useState(0);
     const isAbortedRef = useRef(false);
     const user = useSelector((state) => state.User);
-    const { _id, secreateCode } = user[0].data;
     const navigate = useNavigate();
+    const [error,setError] = useState(null)
+    
+    const localStorageUser =JSON.parse(window.localStorage.getItem('user'))
+    const userData = user && user[0] && user[0].data ? user[0].data : null || localStorageUser.data;
+    const _id = userData ? userData._id : null || userData._id;
+    const secreateCode = userData ? userData.secreateCode : null || userData.secreateCode;
 
     async function handleFileChange(event) {
         if (!conn) {
-            throw new ApiError(401, "Connection is not established yet");
+            alert( "Connection is not established yet");
+            return;
         }
         const file = event.target.files[0];
         setSelectedFiles((prevFiles) => [...prevFiles, file]);
         isAbortedRef.current = false;
         await fileSharing(file, conn, setProgress, isAbortedRef);
     }
-
     const handleUploadClick = () => {
         document.getElementById("fileInput").click();
     };
-
+    
     const removeFile = (fileToRemove) => {
         setSelectedFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
         isAbortedRef.current = true;
+        setProgress(0)
     };
-
+    
     const restartNewConnection = async () => {
         setConn(null); // Close current connection
         setSelectedFiles([]); // Clear selected files
@@ -50,10 +56,10 @@ function SharingPanel() {
         if (response) {
             navigate("/");
         } else {
-            throw new ApiError(404, "Something unexpected happened while deleting user");
+            setError({status:500,message:"Something unexpected happened while deleting user"});
         }
     };
-
+    
     useEffect(() => {
         if (peer) {
             peer.on("connection", (connection) => {
@@ -67,6 +73,9 @@ function SharingPanel() {
         }
     }, [peer, setConn]);
 
+    if(error){
+        return <ErrorPage error={error}/>
+    }
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <div className="container mx-auto p-4">
@@ -90,7 +99,7 @@ function SharingPanel() {
                     </div>
                     <SenderKey secreateCode={secreateCode} />
                 </div>
-                <div className="flex justify-between mb-4">
+                <div className="relative">
                     <div className="p-4 bg-white rounded-lg shadow-md w-full min-h-[300px]">
                         <button
                             onClick={restartNewConnection}
@@ -108,36 +117,29 @@ function SharingPanel() {
                                     </div>
                                 ) : (
                                     selectedFiles.map((file, index) => (
-                                        <div
-                                            key={index}
-                                            className="w-full md:w-1/2 lg:w-1/3 p-2"
-                                        >
+                                        <div key={index} className="w-full md:w-1/2 lg:w-1/3 p-2">
                                             <File
                                                 file={file}
-                                                onDelete={() =>
-                                                    removeFile(file)
-                                                }
+                                                default_img={fileImage}
+                                                onDelete={() => removeFile(file)}
                                             />
-                                            <div className="w-full bg-gray-200 rounded-full mt-2">
-                                                <div
-                                                    className="bg-indigo-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
-                                                    style={{
-                                                        width: `${progress}%`,
-                                                    }}
-                                                >
-                                                    {progress}%
-                                                </div>
-                                            </div>
                                         </div>
                                     ))
                                 )}
                             </div>
                         )}
                     </div>
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-gray-200 h-2 w-[400px] mx-auto rounded-lg">
+                            <div
+                                className="bg-indigo-600 h-2 rounded-lg"
+                                style={{ width: `${progress}%` }}
+                            ></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
-
 export default SharingPanel;

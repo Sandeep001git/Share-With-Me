@@ -2,44 +2,41 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser } from "../Api/index.js";
 import { useDispatch } from "react-redux";
-import { userData , removeUser } from "../store/UserStore.js";
+import { userData, removeUser } from "../store/UserStore.js";
 import { usePeerContext } from "../peer/Peer.jsx";
 import ErrorPage from "./ErrorPage.jsx";
 import Peer from "peerjs";
 import { useAppContext } from "../peer/Page.context.jsx";
 import { useSelector } from "react-redux";
+import logoImage from "../assets/logo.png";
 
 function CreateUser() {
     const navigate = useNavigate();
     const [mode, setMode] = useState("");
     const [username, setUsername] = useState("");
     const dispatch = useDispatch();
-    const user = useSelector((state)=>state.User);
+    const user = useSelector((state) => state.User);
     const { peer, setPeer } = usePeerContext();
     const [error, setError] = useState(null);
     const { isFirstLoad, resetApp } = useAppContext();
 
     useEffect(() => {
-
         if (isFirstLoad) {
             resetApp();
-        } else if (!isFirstLoad && (!peer || !peer.id)) {            
+        } else if (!isFirstLoad && (!peer || !peer.id)) {
             const initializePeer = async () => {
                 try {
-                    dispatch(removeUser(user[0].data))
-                    console.log(user)
+                    dispatch(removeUser(user[0].data));
                     const newPeer = new Peer();
                     newPeer.on("open", (id) => {
                         console.log(`Peer ID: ${id}`);
                         sessionStorage.setItem("peerId", id);
                     });
-                    newPeer.on("error", (err) => {
-                        console.error("PeerJS Error:", err);
+                    newPeer.on("error", () => {
+                        setError("PeerJS Error:");
                     });
-
                     setPeer(newPeer);
                 } catch (error) {
-                    console.error("Error initializing peer:", error);
                     setError({
                         status: 500,
                         message: "Error initializing Peer",
@@ -49,7 +46,6 @@ function CreateUser() {
 
             initializePeer();
         }
-
     }, [isFirstLoad, peer?.id, setPeer, resetApp]);
 
     const handleModeChange = (mode) => {
@@ -60,17 +56,17 @@ function CreateUser() {
         e.preventDefault();
 
         try {
-            const user = await createUser(username, mode, peer.id);
-            if (user.success) {
-                const storeUser = JSON.stringify(user);
+            const response = await createUser(username, mode, peer.id);
+            if (response.success) {
+                const storeUser = JSON.stringify(response);
                 window.localStorage.setItem("user", storeUser);
-                dispatch(userData(user.data));
-                navigate(mode === "sender" ? "/sender" : "/receiver")
+                dispatch(userData(response.data));
+                navigate(mode === "sender" ? "/sender" : "/receiver");
             } else {
-                setError({ status: user.status, message: user.message });
+                setError({ status: response.status, message: response.message });
             }
         } catch (error) {
-            setError({ status: 500, message: "Internal Server Error" });
+            setError({ status: 500, message: error?.response?.data?.message });
         }
     };
 
@@ -82,9 +78,10 @@ function CreateUser() {
         <div className="flex flex-col min-h-screen bg-gray-100">
             <div className="flex-grow flex items-center justify-center">
                 <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                    <h2 className="text-2xl font-bold mb-6 text-center">
-                        User Information
-                    </h2>
+                    <img src={logoImage} alt="ShareWithMe" className="mx-auto mb-4"/>
+                    <div className="mb-6 text-center">
+                        <h2 className="text-2xl font-bold">User Information</h2>
+                    </div>
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <label

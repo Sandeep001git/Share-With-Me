@@ -3,9 +3,6 @@ import { FaRegCopy } from "react-icons/fa";
 // eslint-disable-next-line react/prop-types
 function SenderKey({secreateCode}) {
     
-    if(!secreateCode){
-        throw new Error()
-    }
     const copyToClipboard = () => {
         navigator.clipboard.writeText(secreateCode);
     };

@@ -4,7 +4,8 @@ import { ApiError } from "../util/index.js";
 const fileSharing = async (file, conn, setProgress, isAbortedRef) => {
     try {
         if (!file) {
-            throw new ApiError(400, "No file provided");
+            alert( "No file provided");
+            return;
         }
 
         // Calculate chunk size and total number of chunks
@@ -12,7 +13,7 @@ const fileSharing = async (file, conn, setProgress, isAbortedRef) => {
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
         if (!conn || !conn.open) {
-            throw new ApiError(500, "Connection not open");
+            alert("Connection not open");
         }
 
         // Send metadata first
@@ -28,7 +29,6 @@ const fileSharing = async (file, conn, setProgress, isAbortedRef) => {
         const sendChunks = async () => {
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (isAbortedRef.current) {
-                    console.log("File Sharing is Aborted");
                     conn.send({type:'aborted'})
                     return;
                 }
@@ -64,8 +64,6 @@ const fileSharing = async (file, conn, setProgress, isAbortedRef) => {
                     );
                 }
             }
-
-            console.log("File sent completely");
             setProgress(100); // Set progress to 100% when done
         };
 

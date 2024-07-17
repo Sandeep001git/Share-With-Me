@@ -11,10 +11,10 @@ function ErrorPage({ error}) {
     };
 
     const goToHome = () => {
-        if(window.location.href == '/'){
-            navigate('/')
-        }else{
+        if(window.location.pathname === '/'){
             window.location.reload();
+        }else{
+            navigate('/')
         }
     };
 

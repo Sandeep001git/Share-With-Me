@@ -4,9 +4,12 @@ import { usePeerContext } from "../peer/Peer.jsx";
 import { closeConnection } from "../config/configuration.js";
 import File from "./File";
 import { useNavigate } from "react-router-dom";
+import fileImage from "../assets/file_download.png";
+import ErrorPage from "./ErrorPage.jsx";
 
 function KeyPanel() {
     const [userInput, setUserInput] = useState("");
+    const [img, setImg] = useState("");
     const [isConnected, setIsConnected] = useState(false);
     const { peer, setConn, conn } = usePeerContext();
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -20,6 +23,7 @@ function KeyPanel() {
     const [progress, setProgress] = useState(0);
     const [id, setId] = useState("");
     const navigate = useNavigate();
+    const [error, setError] = useState(null);
 
     const handleClick = async () => {
         try {
@@ -37,17 +41,16 @@ function KeyPanel() {
                     });
                     connection.on("data", async (message) => {
                         if (message.type === "metadata") {
-                            console.log("Metadata received:", message);
                             setFileData({
                                 fileName: message.fileName,
                                 fileType: message.fileType,
                                 fileSize: message.fileSize,
                                 totalChunks: message.totalChunks,
                             });
-                            setReceivedChunks([]);
+                            setReceivedChunks([]); 
                             setProgress(0);
+                            setImg(fileImage);
                         } else if (message.type === "chunk") {
-                            console.log("Chunk received:", message);
                             const { data, chunkIndex } = message;
                             const dataArray = new Uint8Array(data);
                             setReceivedChunks((prevChunks) => {
@@ -56,7 +59,9 @@ function KeyPanel() {
                                 return updatedChunks;
                             });
                         } else if (message.type === "aborted") {
-                            setSelectedFiles((prevFiles) => prevFiles.slice(0, -1));
+                            setSelectedFiles((prevFiles) =>
+                                prevFiles.slice(0, -1)
+                            );
                             setFileData({
                                 fileName: "",
                                 fileType: "",
@@ -67,56 +72,49 @@ function KeyPanel() {
                         }
                     });
                     connection.on("error", (err) => {
-                        console.error("Connection error:", err);
+                        setError({status:500,message:err})
                         setIsConnected(false);
                     });
                 } else {
-                    console.error(
-                        "Error:",
-                        sender.message || "Cannot connect to peer"
-                    );
+                    setError({status:500,message:sender.message})
                 }
             }
         } catch (error) {
-            console.error("Connection error:", error);
+            setError({status:500,message:'Connection Error'})
         }
     };
 
     useEffect(() => {
         if (fileData.totalChunks > 0) {
-            const lastChunkIndex = receivedChunks.length - 1;
-            if (lastChunkIndex >= 0) {
-                const totalchunks = fileData.totalChunks;
-                const chunkVal = lastChunkIndex + 1;
-                const progress = Math.round((chunkVal / totalchunks) * 100);
-                setProgress(progress);
-                console.log(`Progress: ${progress}%`);
-            }
+            const nonEmptyChunks = receivedChunks.filter(chunk => chunk !== undefined).length;
+            const progress = Math.round((nonEmptyChunks / fileData.totalChunks) * 100);
+            setProgress(progress);
         }
-    }, [receivedChunks, fileData]);
+    }, [receivedChunks, fileData.totalChunks]);
 
     useEffect(() => {
-        if (isTransferComplete()) {
+        if (receivedChunks.length > 0 && isTransferComplete()) {
             const fileBlob = new Blob(receivedChunks, {
                 type: fileData.fileType,
             });
             const fileUrl = URL.createObjectURL(fileBlob);
-            setSelectedFiles((prevFiles) => [
-                ...prevFiles,
-                {
-                    ...fileData,
-                    url: fileUrl,
-                    name: fileData.fileName,
-                    size: fileData.fileSize,
-                },
-            ]); // Assuming only one file for simplicity
-            console.log("File received and reconstructed:", fileBlob);
+            const filePreview = {
+                ...fileData,
+                url: fileUrl,
+                name: fileData.fileName,
+                size: fileData.fileSize,
+            };
+            setSelectedFiles([filePreview]); // Show the file as soon as the first chunk is received and update progressively
+
+            // Clear file data and chunks after completion
             setFileData({
                 fileName: "",
                 fileType: "",
                 fileSize: "",
                 totalChunks: 0,
             });
+            setReceivedChunks([]);
+            setProgress(0);
         }
     }, [receivedChunks]);
 
@@ -137,7 +135,6 @@ function KeyPanel() {
 
     const restartNewConnection = async () => {
         const response = await deleteReciver(id);
-        console.log(response);
         if (response) {
             setIsConnected(false);
             setUserInput("");
@@ -158,14 +155,18 @@ function KeyPanel() {
         }
     };
 
+    if(error){
+        return <ErrorPage error={error}/>
+    }
+
     return (
-        <>
+        <div className="flex flex-col min-h-screen bg-gray-100">
             {isConnected ? (
-                <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="flex-1 flex items-center justify-center">
                     <div className="bg-white p-8 rounded shadow-md w-2/3">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold">
-                                File Receiver
+                                File Received
                             </h2>
                             <button
                                 onClick={restartNewConnection}
@@ -174,9 +175,9 @@ function KeyPanel() {
                                 New Connection
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                             {selectedFiles.length === 0 ? (
-                                <div className="w-full text-center font-bold text-lg content-center align-middle text-gray-500">
+                                <div className="w-full text-center font-bold text-lg text-gray-500">
                                     No files received yet.
                                 </div>
                             ) : (
@@ -184,18 +185,9 @@ function KeyPanel() {
                                     <div key={index} className="w-full p-2">
                                         <File
                                             file={file}
+                                            default_img={img}
                                             onDelete={() => removeFile(file)}
                                         />
-                                        <div className="w-full bg-gray-200 rounded-full mt-2">
-                                            <div
-                                                className="bg-indigo-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
-                                                style={{
-                                                    width: `${progress}%`,
-                                                }}
-                                            >
-                                                {progress}%
-                                            </div>
-                                        </div>
                                     </div>
                                 ))
                             )}
@@ -203,7 +195,7 @@ function KeyPanel() {
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+                <div className="flex-1 flex items-center justify-center">
                     <div className="bg-white p-8 rounded shadow-lg w-96">
                         <label
                             className="block text-gray-700 text-lg font-bold mb-2"
@@ -230,7 +222,15 @@ function KeyPanel() {
                     </div>
                 </div>
             )}
-        </>
+            <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-2/3">
+                <div className="bg-gray-200 h-2 rounded-md mb-20">
+                    <div
+                        className="bg-indigo-600 h-2"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
+            </div>
+        </div>
     );
 }
 
