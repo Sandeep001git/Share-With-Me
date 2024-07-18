@@ -27,7 +27,7 @@ ShareMe is a simple web application for sending files using WebRTC with PeerJS. 
 1. **Clone the repository**:
 
     ```sh
-    git clone https://github.com/yourusername/shareme.git
+    git clone https://github.com/Sandeep001git/Share-With-Me.git
     cd shareme
     ```
 
@@ -56,17 +56,17 @@ ShareMe is a simple web application for sending files using WebRTC with PeerJS. 
     - The sender initiates the file transfer, and the receiver accepts the files.
 
 3. **Sending Files**:
-    - The sender enters the receiver's PeerID and selects the files to send.
+    - The sender waits for the reciver to initiate the connection.
     - Once the connection is established, files are transferred securely using WebRTC.
 
 4. **Receiving Files**:
-    - The receiver waits for the sender to initiate the connection.
+    - The reciver enters the sender's secret key and wait for sender to send the files.
     - Once the sender starts the file transfer, the receiver can download the files.
 
 ## How It Works
 
 - **WebRTC with PeerJS**: PeerJS is used to simplify the process of establishing WebRTC connections. It provides an easy-to-use API for creating and managing peer connections.
-- **User Identification**: Each user is identified by a unique PeerID and a secret key. The PeerID is used for establishing WebRTC connections, while the secret key ensures secure communication.
+- **User Identification**: Each user is identified by a unique PeerID and a secret key. The secret Key is used for establishing WebRTC connections, it ensures secure communication.
 - **Anonymous Access**: Users do not need to log in or provide personal information. The app generates a unique secret key for each user on their first visit, which is stored locally.
 
 ## Contributing
